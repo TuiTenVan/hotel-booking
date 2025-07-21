@@ -35,6 +35,15 @@ public class RoleController {
         }
     }
 
+    @GetMapping("/{roleId}")
+    public ResponseEntity<Role> getRoleById(@PathVariable Long roleId) {
+        return roleService.getRoles().stream()
+                .filter(role -> role.getId().equals(roleId))
+                .findFirst()
+                .map(role -> new ResponseEntity<>(role, HttpStatus.OK))
+                .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    }
+
     @DeleteMapping("/delete/{roleId}")
     public void deleteRole(@PathVariable Long roleId) {
         roleService.deleteRole(roleId);
