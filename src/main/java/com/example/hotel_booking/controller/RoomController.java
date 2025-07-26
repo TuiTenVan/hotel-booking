@@ -43,8 +43,8 @@ public class RoomController {
 
 	@PostMapping("/addNewRoom")
 	@PreAuthorize("hasRole('ROLE_ADMIN')")
-	public ResponseEntity<RoomResponse> addNewRooma(@RequestParam MultipartFile image,
-			@RequestParam String roomType, @RequestParam BigDecimal roomPrice) {
+	public ResponseEntity<RoomResponse> addNewRooma(@RequestParam("image") MultipartFile image,
+													@RequestParam("roomType") String roomType, @RequestParam("roomPrice") BigDecimal roomPrice) {
 
 		Supplier<ResponseEntity<RoomResponse>> addNewRoomSupplier = () -> {
 			try {
@@ -73,7 +73,6 @@ public class RoomController {
 		for (Room room : listRooms) {
 			byte[] imageBytes = roomService.getRoomImageById(room.getId());
 			if (imageBytes != null && imageBytes.length > 0) {
-				@SuppressWarnings("deprecation")
 				String base64Image = Base64.encodeBase64String(imageBytes);
 				RoomResponse response = getRoomResponse(room);
 				response.setImage(base64Image);
@@ -93,8 +92,8 @@ public class RoomController {
 	@PutMapping("/update/{roomId}")
 	@PreAuthorize("hasRole('ROLE_ADMIN')")
 	public ResponseEntity<RoomResponse> updateRoom(@PathVariable Long roomId,
-			@RequestParam(required = false) String roomType, @RequestParam(required = false) BigDecimal roomPrice,
-			@RequestParam(required = false) MultipartFile image) throws IOException, SerialException, SQLException {
+												   @RequestParam(required = false) String roomType, @RequestParam(required = false) BigDecimal roomPrice,
+												   @RequestParam(required = false) MultipartFile image) throws IOException, SerialException, SQLException {
 
 		byte[] photoBytes = image != null && !image.isEmpty() ? image.getBytes() : roomService.getRoomImageById(roomId);
 		Blob blob = photoBytes != null && photoBytes.length > 0 ? new SerialBlob(photoBytes) : null;
@@ -115,58 +114,32 @@ public class RoomController {
 		}).orElseThrow(() -> new ResourceNotFoundException("Room not found"));
 	}
 
-
 	@GetMapping("/available-rooms")
 	public ResponseEntity<List<RoomResponse>> getRoomAvailable(
 			@RequestParam("checkIn") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate checkIn,
 			@RequestParam("checkOut") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate checkOut,
 			@RequestParam("roomType") String roomType) {
 		List<Room> availableRoom = roomService.getAvailableRooms(checkIn, checkOut, roomType);
-		List<RoomResponse> roomResponses = new ArrayList<>();
-		for (Room room : availableRoom) {
-			byte[] photoBytes = roomService.getRoomImageById(room.getId());
-			if (photoBytes != null && photoBytes.length > 0) {
-				String imageBase64 = Base64.encodeBase64String(photoBytes);
-				RoomResponse roomResponse = getRoomResponse(room);
-				roomResponse.setImage(imageBase64);
-				roomResponses.add(roomResponse);
-			}
-		}
+
+		List<RoomResponse> roomResponses = availableRoom.stream()
+				.map(room -> {
+					byte[] photoBytes = roomService.getRoomImageById(room.getId());
+					if (photoBytes != null && photoBytes.length > 0) {
+						String imageBase64 = Base64.encodeBase64String(photoBytes);
+						RoomResponse roomResponse = getRoomResponse(room);
+						roomResponse.setImage(imageBase64);
+						return roomResponse;
+					}
+					return null;
+				})
+				.filter(Objects::nonNull)
+				.collect(Collectors.toList());
+
 		if (roomResponses.isEmpty()) {
 			return ResponseEntity.noContent().build();
 		} else {
 			return ResponseEntity.ok(roomResponses);
 		}
-
-	}
-
-	@GetMapping("/available-rooms")
-	public ResponseEntity<List<RoomResponse>> getRoomAvailable(
-	        @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate checkIn,
-	        @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate checkOut,
-	        @RequestParam String roomType) {
-	    List<Room> availableRoom = roomService.getAvailableRooms(checkIn, checkOut, roomType);
-
-	    List<RoomResponse> roomResponses = availableRoom.stream()
-	            .map(room -> {
-	                byte[] photoBytes = roomService.getRoomImageById(room.getId());
-	                if (photoBytes != null && photoBytes.length > 0) {
-	                    @SuppressWarnings("deprecation")
-						String imageBase64 = Base64.encodeBase64String(photoBytes);
-	                    RoomResponse roomResponse = getRoomResponse(room);
-	                    roomResponse.setImage(imageBase64);
-	                    return roomResponse;
-	                }
-	                return null;
-	            })
-	            .filter(Objects::nonNull)
-	            .collect(Collectors.toList());
-
-	    if (roomResponses.isEmpty()) {
-	        return ResponseEntity.noContent().build();
-	    } else {
-	        return ResponseEntity.ok(roomResponses);
-	    }
 	}
 
 
@@ -189,8 +162,8 @@ public class RoomController {
 				bookingResponses);
 	}
 
-	 private List<BookedRoom> getAllBookingByRoomId(Long roomId) {
-
-	 	return bookingService.getAllBookingByRoomId(roomId);
-	 }
+	private List<BookedRoom> getAllBookingByRoomId(Long roomId) {
+		return bookingService.getAllBookingByRoomId(roomId);
+	}
 }
+
