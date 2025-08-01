@@ -4,6 +4,7 @@ import com.example.hotel_booking.dto.response.BookingResponse;
 import com.example.hotel_booking.dto.response.RoomResponse;
 import com.example.hotel_booking.entity.BookedRoom;
 import com.example.hotel_booking.entity.Room;
+import com.example.hotel_booking.enums.RoomType;
 import com.example.hotel_booking.exception.ImageRetrievalException;
 import com.example.hotel_booking.exception.ResourceNotFoundException;
 import com.example.hotel_booking.service.IBookingService;
@@ -26,10 +27,7 @@ import java.math.BigDecimal;
 import java.sql.Blob;
 import java.sql.SQLException;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -42,14 +40,14 @@ public class RoomController {
     IBookingService bookingService;
 
 	@PostMapping("/addNewRoom")
-//	@PreAuthorize("hasRole('ROLE_ADMIN')")
-	public ResponseEntity<RoomResponse> addNewRooma(@RequestParam("image") MultipartFile image,
+//	@PreAuthorize("hasRole('RADMIN')")
+	public ResponseEntity<RoomResponse> addNewRoom(@RequestParam("image") MultipartFile image,
 													@RequestParam("roomType") String roomType, @RequestParam("roomPrice") BigDecimal roomPrice) {
 
 		Supplier<ResponseEntity<RoomResponse>> addNewRoomSupplier = () -> {
 			try {
 				Room savedRoom = roomService.addNewRoom(image, roomType, roomPrice);
-				RoomResponse response = new RoomResponse(savedRoom.getId(), savedRoom.getRoomType(),
+				RoomResponse response = new RoomResponse(savedRoom.getId(), savedRoom.getRoomType().name(),
 						savedRoom.getRoomPrice());
 				return ResponseEntity.ok(response);
 			} catch (SQLException | IOException e) {
@@ -62,8 +60,11 @@ public class RoomController {
 	}
 
 	@GetMapping("/roomTypes")
-	public List<String> getRoomTypes() {
-		return roomService.getAllRoomTypes();
+	public ResponseEntity<List<String>> getRoomTypes() {
+		List<String> types = Arrays.stream(RoomType.values())
+				.map(Enum::name)
+				.collect(Collectors.toList());
+		return ResponseEntity.ok(types);
 	}
 
 	@GetMapping("/allRooms")
@@ -83,14 +84,14 @@ public class RoomController {
 	}
 
 	@DeleteMapping("/delete/room/{roomId}")
-	@PreAuthorize("hasRole('ROLE_ADMIN')")
+//	@PreAuthorize("hasRole('ROLE_ADMIN')")
 	public ResponseEntity<Void> deleteRoom(@PathVariable Long roomId) {
 		roomService.deleteRoom(roomId);
 		return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 	}
 
 	@PutMapping("/update/{roomId}")
-	@PreAuthorize("hasRole('ROLE_ADMIN')")
+//	@PreAuthorize("hasRole('ROLE_ADMIN')")
 	public ResponseEntity<RoomResponse> updateRoom(@PathVariable Long roomId,
 												   @RequestParam(required = false) String roomType, @RequestParam(required = false) BigDecimal roomPrice,
 												   @RequestParam(required = false) MultipartFile image) throws IOException, SerialException, SQLException {
@@ -158,7 +159,7 @@ public class RoomController {
 				throw new ImageRetrievalException("Error get image response");
 			}
 		}
-		return new RoomResponse(room.getId(), room.getRoomType(), room.getRoomPrice(), room.isBooked(), imageBytes,
+		return new RoomResponse(room.getId(), room.getRoomType().name(), room.getRoomPrice(), room.isBooked(), imageBytes,
 				bookingResponses);
 	}
 

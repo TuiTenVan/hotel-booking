@@ -5,17 +5,10 @@ import java.sql.Blob;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.example.hotel_booking.enums.RoomType;
+import jakarta.persistence.*;
 import org.apache.commons.lang3.RandomStringUtils;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Lob;
-import jakarta.persistence.OneToMany;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -32,7 +25,10 @@ public class Room {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "room_id")
     private Long id;
-    private String roomType;
+
+    @Enumerated(EnumType.STRING)
+    private RoomType roomType;
+
     private BigDecimal roomPrice;
     private boolean isBooked = false;
     private String roomName;

@@ -14,7 +14,6 @@ import java.util.Optional;
 @Service
 public interface IRoomService {
 	Room addNewRoom(MultipartFile image, String roomType, BigDecimal roomPrice) throws SQLException, IOException;
-	List<String> getAllRoomTypes();
 	List<Room> getAllRooms();
 	byte[] getRoomImageById(Long roomId);
 	void deleteRoom(Long roomId);

@@ -1,10 +1,13 @@
 package com.example.hotel_booking.service.impl;
 
 import com.example.hotel_booking.entity.Room;
+import com.example.hotel_booking.enums.RoomType;
 import com.example.hotel_booking.exception.InternalServerException;
 import com.example.hotel_booking.exception.ResourceNotFoundException;
 import com.example.hotel_booking.repository.RoomRepository;
 import com.example.hotel_booking.service.IRoomService;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -19,16 +22,17 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
+@FieldDefaults(level = lombok.AccessLevel.PRIVATE, makeFinal = true)
 public class RoomServiceImpl implements IRoomService {
 
-	@Autowired
-	private RoomRepository roomRepository;
+	RoomRepository roomRepository;
 
 	@Override
 	public Room addNewRoom(MultipartFile imageFile, String roomType, BigDecimal roomPrice)
 			throws SQLException, IOException {
 		Room room = new Room();
-		room.setRoomType(roomType);
+		room.setRoomType(RoomType.valueOf(roomType));
 		room.setRoomPrice(roomPrice);
 		if (!imageFile.isEmpty()) {
 			byte[] imageBytes = imageFile.getBytes();
@@ -36,11 +40,6 @@ public class RoomServiceImpl implements IRoomService {
 			room.setImage(imageBlob);
 		}
 		return roomRepository.save(room);
-	}
-
-	@Override
-	public List<String> getAllRoomTypes() {
-		return roomRepository.findRoomTypes();
 	}
 
 	@Override
@@ -71,14 +70,13 @@ public class RoomServiceImpl implements IRoomService {
 		if (optional.isPresent()) {
 			roomRepository.deleteById(roomId);
 		}
-
 	}
 
 	@Override
 	public Room updateRoom(Long roomId, String roomType, BigDecimal roomPrice, byte[] photoBytes) {
 		Room room = roomRepository.findById(roomId)
 				.orElseThrow(() -> new ResourceNotFoundException("Room not found"));
-		if(roomType != null) room.setRoomType(roomType);
+		if(roomType != null) room.setRoomType(RoomType.valueOf(roomType));;
 		if(roomPrice != null) room.setRoomPrice(roomPrice);
 		if(photoBytes != null && photoBytes.length > 0) {
 			try {

@@ -52,7 +52,7 @@ public class BookingController {
 
     private BookingResponse getBookingResponse(BookedRoom bookedRoom) {
         Room theRoom = iRoomService.getRoomById(bookedRoom.getRoom().getId()).get();
-        RoomResponse roomResponse = new RoomResponse(theRoom.getId(), theRoom.getRoomType(), theRoom.getRoomPrice());
+        RoomResponse roomResponse = new RoomResponse(theRoom.getId(), theRoom.getRoomType().name(), theRoom.getRoomPrice());
 
         return new BookingResponse(bookedRoom.getId(), bookedRoom.getCheckIn(),
                 bookedRoom.getCheckOut(),
