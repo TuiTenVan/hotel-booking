@@ -42,7 +42,7 @@ public class RoomController {
     IBookingService bookingService;
 
 	@PostMapping("/addNewRoom")
-	@PreAuthorize("hasRole('ROLE_ADMIN')")
+//	@PreAuthorize("hasRole('ROLE_ADMIN')")
 	public ResponseEntity<RoomResponse> addNewRooma(@RequestParam("image") MultipartFile image,
 													@RequestParam("roomType") String roomType, @RequestParam("roomPrice") BigDecimal roomPrice) {
 
