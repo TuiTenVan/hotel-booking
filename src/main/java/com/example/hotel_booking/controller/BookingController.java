@@ -37,7 +37,6 @@ public class BookingController {
         return ResponseEntity.ok(bookingResponses);
     }
 
-
     @GetMapping("/confirm/{confirmCode}")
     public ResponseEntity<?> getBookingConfirmCode(@PathVariable String confirmCode) {
         try {

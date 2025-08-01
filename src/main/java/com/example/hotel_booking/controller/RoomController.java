@@ -40,7 +40,7 @@ public class RoomController {
     IBookingService bookingService;
 
 	@PostMapping("/addNewRoom")
-//	@PreAuthorize("hasRole('RADMIN')")
+	@PreAuthorize("hasRole('ADMIN')")
 	public ResponseEntity<RoomResponse> addNewRoom(@RequestParam("image") MultipartFile image,
 													@RequestParam("roomType") String roomType, @RequestParam("roomPrice") BigDecimal roomPrice) {
 
@@ -84,14 +84,14 @@ public class RoomController {
 	}
 
 	@DeleteMapping("/delete/room/{roomId}")
-//	@PreAuthorize("hasRole('ROLE_ADMIN')")
+	@PreAuthorize("hasRole('ADMIN')")
 	public ResponseEntity<Void> deleteRoom(@PathVariable Long roomId) {
 		roomService.deleteRoom(roomId);
 		return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 	}
 
 	@PutMapping("/update/{roomId}")
-//	@PreAuthorize("hasRole('ROLE_ADMIN')")
+	@PreAuthorize("hasRole('ADMIN')")
 	public ResponseEntity<RoomResponse> updateRoom(@PathVariable Long roomId,
 												   @RequestParam(required = false) String roomType, @RequestParam(required = false) BigDecimal roomPrice,
 												   @RequestParam(required = false) MultipartFile image) throws IOException, SerialException, SQLException {
@@ -119,7 +119,7 @@ public class RoomController {
 	public ResponseEntity<List<RoomResponse>> getRoomAvailable(
 			@RequestParam("checkIn") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate checkIn,
 			@RequestParam("checkOut") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate checkOut,
-			@RequestParam("roomType") String roomType) {
+			@RequestParam("roomType") RoomType roomType) {
 		List<Room> availableRoom = roomService.getAvailableRooms(checkIn, checkOut, roomType);
 
 		List<RoomResponse> roomResponses = availableRoom.stream()
@@ -142,7 +142,6 @@ public class RoomController {
 			return ResponseEntity.ok(roomResponses);
 		}
 	}
-
 
 	private RoomResponse getRoomResponse(Room room) {
 		List<BookedRoom> bookedRooms = getAllBookingByRoomId(room.getId());

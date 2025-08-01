@@ -94,7 +94,7 @@ public class RoomServiceImpl implements IRoomService {
 	}
 
 	@Override
-	public List<Room> getAvailableRooms(LocalDate checkIn, LocalDate checkOut, String roomType) {
+	public List<Room> getAvailableRooms(LocalDate checkIn, LocalDate checkOut, RoomType roomType) {
 		return roomRepository.findAvailableRooms(checkIn, checkOut, roomType);
 	}
 
