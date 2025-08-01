@@ -52,7 +52,7 @@ public class RoomController {
 				return ResponseEntity.ok(response);
 			} catch (SQLException | IOException e) {
 				// Handle exceptions as needed
-				return ResponseEntity.status(500).build(); // For example, return a 500 Internal Server Error
+				return ResponseEntity.status(500).build();
 			}
 		};
 

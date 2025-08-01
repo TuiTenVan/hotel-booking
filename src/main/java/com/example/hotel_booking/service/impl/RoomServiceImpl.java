@@ -8,7 +8,6 @@ import com.example.hotel_booking.repository.RoomRepository;
 import com.example.hotel_booking.service.IRoomService;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
