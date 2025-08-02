@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Xác nhận đặt phòng</title>
+</head>
+<body>
+<h2>Xin chào [[${userName}]],</h2>
+<p>Cảm ơn bạn đã đặt phòng tại <b>BookingApp</b>.</p>
+<p>Vui lòng xác nhận đặt phòng bằng cách nhấn vào liên kết sau:</p>
+<p>
+    <a th:href="@{${confirmLink}}" target="_blank">Xác nhận đặt phòng</a>
+</p>
+<p>Mã xác nhận: <b>[[${confirmCode}]]</b></p>
+<p>Trân trọng,<br>Đội ngũ BookingApp</p>
+</body>
+</html>

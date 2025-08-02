@@ -9,7 +9,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: none
+      ddl-auto: update
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
@@ -19,6 +19,18 @@ spring:
     multipart:
       max-file-size: 100MB
       max-request-size: 100MB
+
+  mail:
+    default-encoding: UTF-8
+    host: smtp.gmail.com
+    port: 587
+    password: iiei grrs rafg agpv
+    protocol: smtp
+    username: nguyenvietvan223@gmail.com
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+    test-connection: false
 
 auth:
   token:
