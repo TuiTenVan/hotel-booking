@@ -37,26 +37,22 @@ public class BookingController {
         return ResponseEntity.ok(bookingResponses);
     }
 
-    @GetMapping("/confirm/{confirmCode}")
-    public ResponseEntity<?> getBookingConfirmCode(@PathVariable String confirmCode) {
-        try {
-            BookedRoom bookedRoom = iBookingService.findByConfirmCode(confirmCode);
-            BookingResponse bookingResponse = getBookingResponse(bookedRoom);
-
-            return ResponseEntity.ok(bookingResponse);
-        } catch (ResourceNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        }
-    }
 
     private BookingResponse getBookingResponse(BookedRoom bookedRoom) {
         Room theRoom = iRoomService.getRoomById(bookedRoom.getRoom().getId()).get();
         RoomResponse roomResponse = new RoomResponse(theRoom.getId(), theRoom.getRoomType().name(), theRoom.getRoomPrice());
 
-        return new BookingResponse(bookedRoom.getId(), bookedRoom.getCheckIn(),
-                bookedRoom.getCheckOut(),
-                bookedRoom.getGuestFullName(), bookedRoom.getGuestEmail(), bookedRoom.getNumOfAdults(),
-                bookedRoom.getNumOfChildren(), bookedRoom.getTotalNumOfGuest(), bookedRoom.getConfirmCode(), roomResponse);
+        return new BookingResponse(bookedRoom.getId(),
+                                    bookedRoom.getCheckIn(),
+                                    bookedRoom.getCheckOut(),
+                                    bookedRoom.getGuestFullName(),
+                                    bookedRoom.getGuestEmail(),
+                                    bookedRoom.getNumOfAdults(),
+                                    bookedRoom.getNumOfChildren(),
+                                    bookedRoom.getTotalNumOfGuest(),
+                                    bookedRoom.getConfirmCode(),
+                                    roomResponse,
+                                    bookedRoom.getStatus().name());
     }
 
     @PostMapping("/room/{roomId}/booking")

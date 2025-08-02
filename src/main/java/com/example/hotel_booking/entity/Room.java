@@ -33,6 +33,9 @@ public class Room {
     private boolean isBooked = false;
     private String roomName;
     private String description;
+    private Integer active = 1;
+    private Integer capacity;
+    private String roomNumber;
 
     @Lob
     private Blob image;

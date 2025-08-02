@@ -31,6 +31,7 @@ public class RoomServiceImpl implements IRoomService {
 	public Room addNewRoom(MultipartFile imageFile, String roomType, BigDecimal roomPrice)
 			throws SQLException, IOException {
 		Room room = new Room();
+		room.setActive(1);
 		room.setRoomType(RoomType.valueOf(roomType));
 		room.setRoomPrice(roomPrice);
 		if (!imageFile.isEmpty()) {
@@ -43,8 +44,9 @@ public class RoomServiceImpl implements IRoomService {
 
 	@Override
 	public List<Room> getAllRooms() {
-		return roomRepository.findAll();
+		return roomRepository.findAllByActive(1);
 	}
+
 
 	@Override
 	public byte[] getRoomImageById(Long roomId) {
@@ -65,10 +67,11 @@ public class RoomServiceImpl implements IRoomService {
 
 	@Override
 	public void deleteRoom(Long roomId) {
-		Optional<Room> optional = roomRepository.findById(roomId);
-		if (optional.isPresent()) {
-			roomRepository.deleteById(roomId);
-		}
+		Room room = roomRepository.findById(roomId)
+				.orElseThrow(() -> new ResourceNotFoundException("Room not found with id: " + roomId));
+
+		room.setActive(0);
+		roomRepository.save(room);
 	}
 
 	@Override
@@ -96,5 +99,4 @@ public class RoomServiceImpl implements IRoomService {
 	public List<Room> getAvailableRooms(LocalDate checkIn, LocalDate checkOut, RoomType roomType) {
 		return roomRepository.findAvailableRooms(checkIn, checkOut, roomType);
 	}
-
 }

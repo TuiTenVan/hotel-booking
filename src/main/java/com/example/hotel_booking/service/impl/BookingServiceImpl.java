@@ -2,15 +2,19 @@ package com.example.hotel_booking.service.impl;
 
 import com.example.hotel_booking.entity.BookedRoom;
 import com.example.hotel_booking.entity.Room;
+import com.example.hotel_booking.enums.BookingStatus;
 import com.example.hotel_booking.exception.InvalidBookingRequestException;
 import com.example.hotel_booking.exception.ResourceNotFoundException;
 import com.example.hotel_booking.repository.BookingRepository;
 import com.example.hotel_booking.service.IBookingService;
 import com.example.hotel_booking.service.IRoomService;
+import jakarta.mail.MessagingException;
+import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -20,9 +24,9 @@ import java.util.List;
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class BookingServiceImpl implements IBookingService {
-
     BookingRepository bookingRepository;
     IRoomService iRoomService;
+    EmailService emailService;
 
     @Override
     public List<BookedRoom> getAllBookingByRoomId(Long roomId) {
@@ -31,9 +35,14 @@ public class BookingServiceImpl implements IBookingService {
 
     @Override
     public void cancelBooking(Long bookingId) {
-        bookingRepository.deleteById(bookingId);
+        BookedRoom booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new ResourceNotFoundException("Booking not found"));
 
+        log.info("Cancelling booking with ID: {}", bookingId);
+        booking.setActive(0);
+        bookingRepository.save(booking);
     }
+
 
     @Override
     public String saveBooking(Long roomId, BookedRoom bookedReq) {
@@ -41,16 +50,40 @@ public class BookingServiceImpl implements IBookingService {
             throw new InvalidBookingRequestException("Check-in date must be before check-out date!");
         }
         Room room = iRoomService.getRoomById(roomId).get();
+
+        if(bookedReq.getTotalNumOfGuest() > room.getCapacity()) {
+            throw new InvalidBookingRequestException("Total number of guests exceeds room capacity!");
+        }
+
         List<BookedRoom> bookedRooms = room.getBookedRooms();
         boolean roomIsAvailable = roomIsAvailable(bookedReq, bookedRooms);
-        if (roomIsAvailable) {
-            room.addBooking(bookedReq);
-            bookingRepository.save(bookedReq);
-        } else {
+        if (!roomIsAvailable) {
             throw new InvalidBookingRequestException("This room is not available for the selected dates");
         }
-        return bookedReq.getConfirmCode();
+
+        bookedReq.setStatus(BookingStatus.PENDING);
+
+        room.addBooking(bookedReq);
+
+        bookingRepository.save(bookedReq);
+
+        String confirmCode = bookedReq.getConfirmCode();
+        String confirmLink = "http://localhost:8088/api/bookings/confirm/" + confirmCode;
+
+        try {
+            emailService.sendBookingConfirmation(
+                    bookedReq.getGuestEmail(),
+                    bookedReq.getGuestFullName(),
+                    confirmCode,
+                    confirmLink
+            );
+        } catch (MessagingException e) {
+            throw new RuntimeException("Failed to send confirmation email", e);
+        }
+
+        return confirmCode;
     }
+
 
     private boolean roomIsAvailable(BookedRoom bookedReq, List<BookedRoom> bookedRooms) {
         return bookedRooms.stream().noneMatch(b -> bookedReq.getCheckIn().equals(b.getCheckIn())
@@ -71,15 +104,23 @@ public class BookingServiceImpl implements IBookingService {
     }
 
     @Override
+    @Transactional
     public BookedRoom findByConfirmCode(String confirmCode) {
+        BookedRoom bookedRoom = bookingRepository.findByConfirmCode(confirmCode)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Booking not found with confirm code: " + confirmCode));
 
-        return bookingRepository.findByConfirmCode(confirmCode)
-                .orElseThrow(() -> new ResourceNotFoundException("No booking found with booking code: " + confirmCode));
+        if (bookedRoom.getStatus() == BookingStatus.PENDING) {
+            bookedRoom.setStatus(BookingStatus.CONFIRMED);
+            bookingRepository.save(bookedRoom);
+        }
+        return bookedRoom;
     }
+
 
     @Override
     public List<BookedRoom> getAllBookings() {
-        return bookingRepository.findAll();
+        return bookingRepository.findAllByActiveOrderByCheckInDesc(1);
     }
 
     @Override

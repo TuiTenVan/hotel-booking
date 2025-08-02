@@ -1,19 +1,15 @@
 package com.example.hotel_booking.entity;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import com.example.hotel_booking.enums.BookingStatus;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
 
 @Entity
 @NoArgsConstructor
@@ -45,6 +41,16 @@ public class BookedRoom {
 
     @Column(name = "code")
     private String confirmCode;
+
+    @Column(name = "active")
+    private Integer active = 1; // 1 - active, 0 - inactive
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status")
+    private BookingStatus status;
+
+    @CreationTimestamp
+    private LocalDateTime createdAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "room_id")

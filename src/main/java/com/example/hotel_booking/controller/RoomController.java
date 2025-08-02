@@ -147,7 +147,7 @@ public class RoomController {
 		List<BookedRoom> bookedRooms = getAllBookingByRoomId(room.getId());
 		List<BookingResponse> bookingResponses = bookedRooms.stream()
 				.map(booking -> new BookingResponse(booking.getId(), booking.getCheckIn(), booking.getCheckOut(),
-						booking.getConfirmCode()))
+						booking.getConfirmCode(), booking.getStatus()))
 				.toList();
 		byte[] imageBytes = null;
 		Blob blobImage = room.getImage();
@@ -159,7 +159,7 @@ public class RoomController {
 			}
 		}
 		return new RoomResponse(room.getId(), room.getRoomType().name(), room.getRoomPrice(), room.isBooked(), imageBytes,
-				bookingResponses);
+				bookingResponses, room.getRoomNumber(), room.getCapacity());
 	}
 
 	private List<BookedRoom> getAllBookingByRoomId(Long roomId) {

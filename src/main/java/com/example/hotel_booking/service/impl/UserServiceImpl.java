@@ -47,7 +47,8 @@ public class UserServiceImpl implements IUserService {
     public void deleteUser(String email) {
         User user = getUserByEmail(email);
         if (user != null) {
-            userRepository.deleteByEmail(email);
+            user.setActive(0);
+            userRepository.save(user);
         }
     }
 

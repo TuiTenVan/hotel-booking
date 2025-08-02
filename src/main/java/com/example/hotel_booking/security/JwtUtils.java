@@ -37,6 +37,8 @@ public class JwtUtils {
                 .map(GrantedAuthority :: getAuthority).toList();
         return Jwts.builder().setSubject(userDetails.getUsername())
                 .claim("roles", roles)
+                .claim("firstName", userDetails.getFirstName())
+                .claim("lastName", userDetails.getLastName())
                 .setIssuedAt(new Date())
                 .setExpiration(new Date((new Date()).getTime() + jwtExpirationTime))
                 .signWith(key(), SignatureAlgorithm.HS256).compact();

@@ -21,6 +21,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class WebUserDetails implements UserDetails {
+    private  User user;
 
     @Serial
     private static final long serialVersionUID = 1L;
@@ -35,7 +36,7 @@ public class WebUserDetails implements UserDetails {
                 .stream()
                 .map(role -> new SimpleGrantedAuthority(role.getName()))
                 .collect(Collectors.toList());
-        return new WebUserDetails(user.getId(), user.getEmail(), user.getPassword(), authorities);
+        return new WebUserDetails(user, user.getId(), user.getEmail(), user.getPassword(), authorities);
     }
 
     @Override
@@ -71,6 +72,14 @@ public class WebUserDetails implements UserDetails {
     @Override
     public boolean isEnabled() {
         return true;
+    }
+
+    public String getFirstName() {
+        return user.getFirstName();
+    }
+
+    public String getLastName() {
+        return user.getLastName();
     }
 
 }

@@ -12,7 +12,7 @@ import com.example.hotel_booking.entity.Room;
 import org.springframework.data.repository.query.Param;
 
 public interface RoomRepository extends JpaRepository<Room, Long> {
-
+	List<Room> findAllByActive(Integer status);
 	@Query("SELECT DISTINCT r.roomType FROM Room r")
 	List<String> findRoomTypes();
 
