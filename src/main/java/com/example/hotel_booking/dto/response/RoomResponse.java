@@ -1,11 +1,10 @@
 package com.example.hotel_booking.dto.response;
 
-import java.math.BigDecimal;
-import java.util.List;
-
+import lombok.Data;
 import org.apache.tomcat.util.codec.binary.Base64;
 
-import lombok.Data;
+import java.math.BigDecimal;
+import java.util.List;
 
 @Data
 public class RoomResponse {
@@ -17,6 +16,10 @@ public class RoomResponse {
 	private List<BookingResponse> bookings;
 	private String roomNumber;
 	private Integer capacity;
+	private Integer quantity;
+	private String description;
+	private List<ExtraServiceResponse> services;
+
 
 	public RoomResponse(Long id, String roomType, BigDecimal roomPrice) {
 		super();
@@ -26,7 +29,9 @@ public class RoomResponse {
 	}
 
 	@SuppressWarnings("deprecation")
-	public RoomResponse(Long id, String roomType, BigDecimal roomPrice, boolean isBooked, byte[] imageBytes, List<BookingResponse> bookings, String roomNumber, Integer capacity) {
+	public RoomResponse(Long id, String roomType, BigDecimal roomPrice, boolean isBooked,
+						byte[] imageBytes, List<BookingResponse> bookings, String roomNumber,
+						Integer capacity, Integer quantity, String description, List<ExtraServiceResponse> services) {
 		super();
 		this.id = id;
 		this.roomType = roomType;
@@ -36,5 +41,8 @@ public class RoomResponse {
 		this.bookings = bookings;
 		this.roomNumber = roomNumber;
 		this.capacity = capacity;
+		this.quantity = quantity;
+		this.description = description;
+		this.services = services;
 	}
 }

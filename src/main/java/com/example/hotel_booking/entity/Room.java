@@ -3,7 +3,9 @@ package com.example.hotel_booking.entity;
 import java.math.BigDecimal;
 import java.sql.Blob;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import com.example.hotel_booking.enums.RoomType;
 import jakarta.persistence.*;
@@ -36,6 +38,7 @@ public class Room {
     private Integer active = 1;
     private Integer capacity;
     private String roomNumber;
+    private Integer quantity;
 
     @Lob
     private Blob image;
@@ -53,4 +56,12 @@ public class Room {
         String bookingCode = RandomStringUtils.randomNumeric(10);
         booking.setConfirmCode(bookingCode);
     }
+
+    @ManyToMany
+    @JoinTable(
+            name = "room_service",
+            joinColumns = @JoinColumn(name = "room_id"),
+            inverseJoinColumns = @JoinColumn(name = "service_id")
+    )
+    private List<ExtraService> services = new ArrayList<>();
 }

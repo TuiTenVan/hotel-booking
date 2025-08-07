@@ -1,6 +1,8 @@
 package com.example.hotel_booking.controller;
 
+import com.example.hotel_booking.dto.request.RoomRequest;
 import com.example.hotel_booking.dto.response.BookingResponse;
+import com.example.hotel_booking.dto.response.ExtraServiceResponse;
 import com.example.hotel_booking.dto.response.RoomResponse;
 import com.example.hotel_booking.entity.BookedRoom;
 import com.example.hotel_booking.entity.Room;
@@ -28,7 +30,6 @@ import java.sql.Blob;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.*;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 @RestController
@@ -41,23 +42,22 @@ public class RoomController {
 
 	@PostMapping("/addNewRoom")
 	@PreAuthorize("hasRole('ADMIN')")
-	public ResponseEntity<RoomResponse> addNewRoom(@RequestParam("image") MultipartFile image,
-													@RequestParam("roomType") String roomType, @RequestParam("roomPrice") BigDecimal roomPrice) {
-
-		Supplier<ResponseEntity<RoomResponse>> addNewRoomSupplier = () -> {
-			try {
-				Room savedRoom = roomService.addNewRoom(image, roomType, roomPrice);
-				RoomResponse response = new RoomResponse(savedRoom.getId(), savedRoom.getRoomType().name(),
-						savedRoom.getRoomPrice());
-				return ResponseEntity.ok(response);
-			} catch (SQLException | IOException e) {
-				// Handle exceptions as needed
-				return ResponseEntity.status(500).build();
-			}
-		};
-
-		return addNewRoomSupplier.get();
+	public ResponseEntity<RoomResponse> addNewRoom(@RequestPart("image") MultipartFile image,
+												   @RequestPart("room") RoomRequest roomRequest
+	) {
+		try {
+			Room savedRoom = roomService.addNewRoom(image, roomRequest);
+			RoomResponse response = new RoomResponse(
+					savedRoom.getId(),
+					savedRoom.getRoomType().name(),
+					savedRoom.getRoomPrice()
+			);
+			return ResponseEntity.ok(response);
+		} catch (SQLException | IOException e) {
+			return ResponseEntity.status(500).build();
+		}
 	}
+
 
 	@GetMapping("/roomTypes")
 	public ResponseEntity<List<String>> getRoomTypes() {
@@ -93,17 +93,20 @@ public class RoomController {
 	@PutMapping("/update/{roomId}")
 	@PreAuthorize("hasRole('ADMIN')")
 	public ResponseEntity<RoomResponse> updateRoom(@PathVariable Long roomId,
-												   @RequestParam(required = false) String roomType, @RequestParam(required = false) BigDecimal roomPrice,
-												   @RequestParam(required = false) MultipartFile image) throws IOException, SerialException, SQLException {
-
-		byte[] photoBytes = image != null && !image.isEmpty() ? image.getBytes() : roomService.getRoomImageById(roomId);
-		Blob blob = photoBytes != null && photoBytes.length > 0 ? new SerialBlob(photoBytes) : null;
-		Room theRoom = roomService.updateRoom(roomId, roomType, roomPrice, photoBytes);
-		theRoom.setImage(blob);
-		RoomResponse response = getRoomResponse(theRoom);
-
-		return ResponseEntity.ok(response);
-
+												   @RequestPart(name = "image", required = false) MultipartFile image,
+												   @RequestPart("room") RoomRequest roomRequest
+	) {
+		try {
+			Room updatedRoom = roomService.updateRoom(roomId, image, roomRequest);
+			RoomResponse response = new RoomResponse(
+					updatedRoom.getId(),
+					updatedRoom.getRoomType().name(),
+					updatedRoom.getRoomPrice()
+			);
+			return ResponseEntity.ok(response);
+		} catch (IOException | SQLException e) {
+			return ResponseEntity.status(500).build();
+		}
 	}
 
 	@GetMapping("/room/{roomId}")
@@ -147,7 +150,7 @@ public class RoomController {
 		List<BookedRoom> bookedRooms = getAllBookingByRoomId(room.getId());
 		List<BookingResponse> bookingResponses = bookedRooms.stream()
 				.map(booking -> new BookingResponse(booking.getId(), booking.getCheckIn(), booking.getCheckOut(),
-						booking.getConfirmCode(), booking.getStatus()))
+						booking.getConfirmCode(), booking.getStatus(), booking.getCreatedAt()))
 				.toList();
 		byte[] imageBytes = null;
 		Blob blobImage = room.getImage();
@@ -158,8 +161,17 @@ public class RoomController {
 				throw new ImageRetrievalException("Error get image response");
 			}
 		}
+		List<ExtraServiceResponse> serviceResponses = room.getServices().stream().map(service -> {
+			ExtraServiceResponse dto = new ExtraServiceResponse();
+			dto.setId(service.getId());
+			dto.setServiceName(service.getServiceName());
+			dto.setDescription(service.getDescription());
+			dto.setPrice(service.getPrice());
+			return dto;
+		}).toList();
+
 		return new RoomResponse(room.getId(), room.getRoomType().name(), room.getRoomPrice(), room.isBooked(), imageBytes,
-				bookingResponses, room.getRoomNumber(), room.getCapacity());
+				bookingResponses, room.getRoomNumber(), room.getCapacity(), room.getQuantity(), room.getDescription(), serviceResponses);
 	}
 
 	private List<BookedRoom> getAllBookingByRoomId(Long roomId) {
