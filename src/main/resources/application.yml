@@ -34,5 +34,5 @@ spring:
 
 auth:
   token:
-    jwtExpirationTime: 3600000 #1 hour in milliseconds
+    jwtExpirationTime: 86400000 #1 hour in milliseconds
     jwtSecret: 36763979244226452948404D635166546A576D5A7134743777217A25432A462D

@@ -2,6 +2,7 @@ package com.example.hotel_booking.entity;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Date;
 
 import com.example.hotel_booking.enums.BookingStatus;
 import jakarta.persistence.*;
@@ -10,6 +11,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
+import org.springframework.data.annotation.CreatedDate;
 
 @Entity
 @NoArgsConstructor
@@ -44,6 +46,9 @@ public class BookedRoom {
 
     @Column(name = "active")
     private Integer active = 1; // 1 - active, 0 - inactive
+
+    @Column(name = "room_number")
+    private String roomNumber;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status")

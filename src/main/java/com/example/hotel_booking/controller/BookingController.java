@@ -37,6 +37,17 @@ public class BookingController {
         return ResponseEntity.ok(bookingResponses);
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getBookingById(@PathVariable Long id) {
+        try {
+            BookedRoom bookedRoom = iBookingService.findById(id); // bạn cần có method này trong service
+            BookingResponse bookingResponse = getBookingResponse(bookedRoom);
+            return ResponseEntity.ok(bookingResponse);
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
+    }
+
 
     private BookingResponse getBookingResponse(BookedRoom bookedRoom) {
         Room theRoom = iRoomService.getRoomById(bookedRoom.getRoom().getId()).get();
@@ -52,7 +63,8 @@ public class BookingController {
                                     bookedRoom.getTotalNumOfGuest(),
                                     bookedRoom.getConfirmCode(),
                                     roomResponse,
-                                    bookedRoom.getStatus().name());
+                                    bookedRoom.getStatus().name(),
+                                    bookedRoom.getCreatedAt());
     }
 
     @PostMapping("/room/{roomId}/booking")

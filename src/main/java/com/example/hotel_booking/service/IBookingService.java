@@ -12,4 +12,5 @@ public interface IBookingService {
     List<BookedRoom> getAllBookings();
     List<BookedRoom> getBookingsByUserEmail(String email);
     List<BookedRoom> getAllBookingByRoomId(Long roomId);
+    BookedRoom findById(Long id);
 }

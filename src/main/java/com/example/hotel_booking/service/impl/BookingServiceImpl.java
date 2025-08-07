@@ -8,6 +8,7 @@ import com.example.hotel_booking.exception.ResourceNotFoundException;
 import com.example.hotel_booking.repository.BookingRepository;
 import com.example.hotel_booking.service.IBookingService;
 import com.example.hotel_booking.service.IRoomService;
+import com.google.zxing.WriterException;
 import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
@@ -17,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.util.List;
 
 @Service
@@ -34,12 +36,18 @@ public class BookingServiceImpl implements IBookingService {
     }
 
     @Override
+    public BookedRoom findById(Long id) {
+        return bookingRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Booking not found with ID: " + id));
+    }
+
+    @Override
     public void cancelBooking(Long bookingId) {
         BookedRoom booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new ResourceNotFoundException("Booking not found"));
 
         log.info("Cancelling booking with ID: {}", bookingId);
-        booking.setActive(0);
+        booking.setStatus(BookingStatus.CANCELED);
         bookingRepository.save(booking);
     }
 
@@ -62,9 +70,7 @@ public class BookingServiceImpl implements IBookingService {
         }
 
         bookedReq.setStatus(BookingStatus.PENDING);
-
         room.addBooking(bookedReq);
-
         bookingRepository.save(bookedReq);
 
         String confirmCode = bookedReq.getConfirmCode();
@@ -80,28 +86,23 @@ public class BookingServiceImpl implements IBookingService {
         } catch (MessagingException e) {
             throw new RuntimeException("Failed to send confirmation email", e);
         }
-
         return confirmCode;
     }
 
-
     private boolean roomIsAvailable(BookedRoom bookedReq, List<BookedRoom> bookedRooms) {
-        return bookedRooms.stream().noneMatch(b -> bookedReq.getCheckIn().equals(b.getCheckIn())
-                || bookedReq.getCheckOut().isBefore(b.getCheckOut())
-                || (bookedReq.getCheckIn().isAfter(b.getCheckIn()) && bookedReq.getCheckIn().isBefore(b.getCheckOut()))
-                || (bookedReq.getCheckIn().isBefore(b.getCheckIn())
-
-                && bookedReq.getCheckOut().equals(b.getCheckOut()))
-                || (bookedReq.getCheckIn().isBefore(b.getCheckIn())
-
-                && bookedReq.getCheckOut().isAfter(b.getCheckOut()))
-
-                || (bookedReq.getCheckIn().equals(b.getCheckOut()) && bookedReq.getCheckOut().equals(b.getCheckIn()))
-
-                || (bookedReq.getCheckIn().equals(b.getCheckOut())
-                && bookedReq.getCheckOut().equals(bookedReq.getCheckIn())));
-
+        return bookedRooms.stream()
+                .filter(b -> b.getStatus() != BookingStatus.FAILED && b.getStatus() != BookingStatus.CANCELED)
+                .noneMatch(b ->
+                        bookedReq.getCheckIn().equals(b.getCheckIn())
+                                || bookedReq.getCheckOut().isBefore(b.getCheckOut())
+                                || (bookedReq.getCheckIn().isAfter(b.getCheckIn()) && bookedReq.getCheckIn().isBefore(b.getCheckOut()))
+                                || (bookedReq.getCheckIn().isBefore(b.getCheckIn()) && bookedReq.getCheckOut().equals(b.getCheckOut()))
+                                || (bookedReq.getCheckIn().isBefore(b.getCheckIn()) && bookedReq.getCheckOut().isAfter(b.getCheckOut()))
+                                || (bookedReq.getCheckIn().equals(b.getCheckOut()) && bookedReq.getCheckOut().equals(b.getCheckIn()))
+                                || (bookedReq.getCheckIn().equals(b.getCheckOut()) && bookedReq.getCheckOut().equals(bookedReq.getCheckIn()))
+                );
     }
+
 
     @Override
     @Transactional
